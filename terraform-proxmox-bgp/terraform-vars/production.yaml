@@ -1,0 +1,54 @@
+proxmox:
+  address: "https://192.168.1.199:8006/api2/json"
+  pool:
+    id: "okd4-14"
+  vms:
+    - id: 201
+      name: "okd4-control-plane-1"
+      description: "k8s control plane 1"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-master.iso"
+      mac_address: "76:c4:8d:d2:1c:4b"
+      started: true
+    - id: 202
+      name: "okd4-control-plane-2"
+      description: "k8s control plane 2"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-master.iso"
+      mac_address: "22:2f:f7:24:d5:f6"
+      started: true
+    - id: 203
+      name: "okd4-control-plane-3"
+      description: "k8s control plane 3"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-master.iso"
+      mac_address: "ce:c2:9d:a6:6d:f2"
+      started: true
+    - id: 204
+      name: "okd4-worker-1"
+      description: "k8s worker 1"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-worker.iso"
+      mac_address: "a2:ea:17:4c:80:11"
+      started: true
+    - id: 205
+      name: "okd4-worker-2"
+      description: "k8s worker 2"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-worker.iso"
+      mac_address: "c2:5f:7e:9d:e9:b9"
+      started: true
+    - id: 206
+      name: "okd4-worker-3"
+      description: "k8s worker 3"
+      node: pve2
+      memory: 16
+      cdrom_file: "local:iso/fcos-worker.iso"
+      mac_address: "bc:24:11:63:09:f6"
+      started: true
+

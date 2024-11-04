@@ -1,0 +1,18 @@
+vault: 
+  policies:
+  - name: kong-policy-reader
+    path: 
+    - name: kv/okd4/data/production/keycloak/openid-clients/kong
+      capabilities:
+      - read
+  auth_k8s_roles:
+  - name: kong
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault
+    - external-secrets
+    bound_sa_namespaces:
+    - external-secrets
+    - hashicorp
+    token_policies:
+    - kong-policy-reader

@@ -1,0 +1,32 @@
+vault: 
+  policies:
+  - name: grafana-policy-reader
+    path: 
+    - name: kv/okd4/data/production/grafana
+      capabilities:
+      - read
+  - name: grafana-signer
+    path: 
+    - name: pki_int_lab_okd_local/sign/grafana
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: grafana
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault
+    - external-secrets
+    - vault-issuer
+    bound_sa_namespaces:
+    - external-secrets
+    - hashicorp
+    - grafana
+    token_policies:
+    - grafana-policy-reader
+    - grafana-signer
+  pki_roles:
+  - name: grafana
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - grafana

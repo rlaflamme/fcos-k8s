@@ -1,0 +1,15 @@
+[controlplanes:children]
+controlplane_leader
+controlplane_followers
+
+[controlplane_leader]
+okd4-control-plane-1
+
+[controlplane_followers]
+okd4-control-plane-2
+okd4-control-plane-3
+
+[workers]
+okd4-worker-1
+okd4-worker-2
+okd4-worker-3

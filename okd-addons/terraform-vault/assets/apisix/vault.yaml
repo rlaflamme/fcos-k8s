@@ -1,0 +1,46 @@
+vault: 
+  policies:
+  - name: apisix-policy-reader
+    path: 
+    - name: kv/okd4/data/pfsense-ca
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/base
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/apisix
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/apisix/apps/+
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/keycloak/openid-clients/apisix
+      capabilities:
+      - read
+  - name: apisix-signer
+    path: 
+    - name: pki_int_lab_okd_local/sign/apisix 
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: apisix
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault
+    - external-secrets
+    - vault-issuer
+    bound_sa_namespaces:
+    - external-secrets
+    - ingress-apisix
+    - hashicorp
+    token_policies:
+    - apisix-policy-reader
+    - apisix-signer
+  pki_roles:
+  - name: apisix
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - apisix-admin
+    - apisix-admin.apps.lab.okd.local
+    - admin.apisix.dev

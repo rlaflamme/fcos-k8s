@@ -1,0 +1,136 @@
+---
+# Fedora CoreOS Kubernetes init with kubeadm
+
+- name: Test connection with ping
+  ansible.builtin.ping:
+
+- name: Get current version of kubernetes
+  ansible.builtin.command:
+    cmd: /usr/bin/rpm -qa kubelet
+  register: kubelet_version_output
+
+- name: Print kubelet version
+  ansible.builtin.debug:
+    var: kubelet_version_output.stdout_lines
+
+- name: Set kubernetes version as a fact
+  ansible.builtin.set_fact:
+    kubernetes_version: "{{ kubelet_version_output.stdout_lines | regex_search('kubelet-([0-9]+\\.[0-9]+\\.[0-9]+)-', '\\1') | first }}"
+
+- name: Print kubernetes_version
+  ansible.builtin.debug:
+    var: kubernetes_version
+
+- name: create clusterconfig resource with current kubernetes version using jinja2
+  delegate_to: 127.0.0.1
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/templates/clusterconfig.yaml.j2"
+    dest: "{{ playbook_dir }}/clusterconfig.yaml"
+
+- name: Copy clusterconfig.yaml
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/clusterconfig.yaml"
+    dest: /root/clusterconfig.yaml
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Execute kubeadm init
+  ansible.builtin.raw: /usr/bin/kubeadm init --config /root/clusterconfig.yaml
+  register: kubeadm_init_output
+
+- name: Print kubeadm init output
+  ansible.builtin.debug:
+    var: kubeadm_init_output.stdout_lines
+
+# this is working if the last 2 lines of kubeadm init output is formatted like below
+# if format changes, adjustments are needed
+#
+#kubeadm join 192.168.1.201:6443 --token b0n35n.ypc22pqnfhw60r9f \
+#        --discovery-token-ca-cert-hash sha256:e06939370cda901ecd4324fe061b78867576020d5b8fd503e1c48e93c7e0cf05
+- name: Get kubeadm join command with tokens
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ kubeadm_init_output.stdout_lines[-2][:-1] }}{{ kubeadm_init_output.stdout_lines[-1] | trim }}"
+
+- name: Print kubeadm join command with tokens
+  ansible.builtin.debug:
+    var: kubeadm_join_command
+
+- name: Delete previous /tmp/{{ inventory_hostname }} on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.file:
+    state: absent
+    path: /tmp/{{ inventory_hostname }}
+    
+- name: Create /tmp/{{ inventory_hostname }} on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.file:
+    path: /tmp/{{ inventory_hostname }}
+    state: directory
+
+- name: Create kubeadm-join-command.sh file on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.copy:
+    dest: /tmp/{{ inventory_hostname }}/kubeadm-join-command.sh
+    mode: '0600'
+    content: "{{ kubeadm_join_command }}"
+
+- name: Create /root/.kube directory on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.file:
+    path: /root/.kube
+    state: directory
+    mode: '0700'
+
+- name: Copy /etc/kubernetes/admin.conf from the controlplane_leader to /root/.kube locally
+  ansible.builtin.fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube
+
+- name: Move /root/.kube/controlplane_leader/etc/kubernetes/admin.conf to /root/.kube/config on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.command:
+    cmd: mv /root/.kube/{{ inventory_hostname }}/etc/kubernetes/admin.conf /root/.kube/config
+
+- name: Delete previous /root/.kube/{{ inventory_hostname }} on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.file:
+    state: absent
+    path: /root/.kube/{{ inventory_hostname }}
+
+- name: Do chmod 700 /root/.kube/config on ansible node
+  delegate_to: 127.0.0.1
+  ansible.builtin.command:
+    cmd: chmod 700 /root/.kube/config
+
+- name: Get ~/.kube/config from local file
+  ansible.builtin.set_fact:
+    kube_config: "{{ lookup('file', '/root/.kube/config') }}"
+
+- name: Print ~/.kube/config from local file
+  ansible.builtin.debug:
+    var: kube_config
+
+  # https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/high-availability/
+- name: Compress kubernetes pki directory
+  ansible.builtin.shell: |
+    cd /etc/kubernetes
+    ls pki/front-proxy-ca.* | sudo tar -T - -rvf /var/home/core/kubernetes_pki.tar
+    ls pki/ca.* | sudo tar -T - -rvf /var/home/core/kubernetes_pki.tar
+    ls pki/sa.* | sudo tar -T - -rvf /var/home/core/kubernetes_pki.tar
+    ls pki/etcd/ca.* | sudo tar -T - -rvf /var/home/core/kubernetes_pki.tar
+
+- name: Copy tar file from the control plane leader to the ansible node
+  ansible.builtin.fetch:
+    src: /var/home/core/kubernetes_pki.tar
+    dest: /tmp
+
+- name: Delete tar file on control plane leader node
+  ansible.builtin.file:
+    state: absent
+    path: /var/home/core/kubernetes_pki.tar
+
+- name: Uncompress files on ansible node before sending them to other control planes
+  delegate_to: 127.0.0.1
+  ansible.builtin.command:
+    cmd: tar xvf /tmp/{{ inventory_hostname }}/var/home/core/kubernetes_pki.tar -C /tmp/{{ inventory_hostname }}/var/home/core

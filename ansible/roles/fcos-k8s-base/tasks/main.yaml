@@ -1,0 +1,71 @@
+---
+# Fedora CoreOS Kubernetes base
+  
+- name: Test connection with ping
+  ansible.builtin.ping:
+
+- block:
+    - name: Set selinux permissive until reboot
+      selinux:
+        policy=targeted
+        state=permissive
+    - name: Disable selinux (required reboot)
+      selinux:
+        state=disabled
+  when: ansible_selinux is defined and ansible_selinux != False
+        and ansible_selinux.status == 'enabled'
+
+- name: Create /etc/yum.repos.d/kubernetes.repo
+  copy:
+    dest: /etc/yum.repos.d/kubernetes.repo
+    content: |
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://pkgs.k8s.io/core:/stable:/{{ k8s_version }}/rpm/
+      enabled=1
+      gpgcheck=1
+      gpgkey=https://pkgs.k8s.io/core:/stable:/{{ k8s_version}}/rpm/repodata/repomd.xml.key
+
+- name: Execute 'rpm-ostree refresh-md'
+  ansible.builtin.raw: rpm-ostree refresh-md
+  register: rpm_ostree_output
+
+- name: Print rpm-ostree output
+  ansible.builtin.debug:
+    var: rpm_ostree_output.stdout_lines
+
+- name: Install the kubelet, kubeadm, cubectl and cri-o binaries
+  ansible.builtin.raw: "rpm-ostree install kubelet kubeadm kubectl cri-o"
+  register: rpm_ostree_output
+
+- name: Print rpm-ostree output
+  ansible.builtin.debug:
+    var: rpm_ostree_output.stdout_lines
+
+- name: Reboot
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 600
+
+- name: Test connection with ping
+  ansible.builtin.ping:
+
+- name: Enable crio.service
+  ansible.builtin.systemd_service:
+    name: crio
+    state: started
+    enabled: true
+
+- name: Enable kubelet.service
+  ansible.builtin.systemd_service:
+    name: kubelet
+    state: started
+    enabled: true
+
+- name: Reboot
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 600
+
+- name: Test connection with ping
+  ansible.builtin.ping:

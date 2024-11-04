@@ -1,0 +1,4 @@
+vault: 
+  policies: []
+  auth_k8s_roles: []
+  pki_roles: []

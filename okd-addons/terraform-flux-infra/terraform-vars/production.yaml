@@ -1,0 +1,35 @@
+flux_bootstrap:
+  config:
+    ca_cert_file: ./assets/production/pfsense-lab-okd-local-ca-bundle.pem
+  flux:
+    target_path: okd4-production
+    image:
+      registry_host: hub-registry.lab.okd.local/fluxcd
+      pull_secret: image-registry
+  gitlab:
+    branch_name: main
+    https_host: https://gitlab.lab.okd.local
+    https_host_project_flux_bootstrap: https://gitlab.lab.okd.local/gitops/flux-bootstrap.git
+    projects:
+      flux_bootstrap: 
+        path: gitops/flux-bootstrap
+        tokens:
+          config_apps_token_writer: production_flux_config_apps_token_writer 
+          config_infra_token_reader: production_flux_config_infra_token_reader
+          flux_system_token_writer: production_flux_system_token_writer
+  vault:
+    address: https://okd4-vault-1.lab.okd.local:8200
+    secrets:
+      flux:
+        path: kv/okd4/production/flux
+        keys:
+          config_apps_token_writer: gitlab_project_config_apps_token_writer 
+          config_infra_token_reader: gitlab_project_config_infra_token_reader
+          flux_system_token_writer: gitlab_project_flux_system_token_writer
+      image_registry:
+        path: kv/okd4/production/image-registry
+        keys:
+          username: username
+          password: password
+  kubernetes:
+    client_config: ~/.kube/config

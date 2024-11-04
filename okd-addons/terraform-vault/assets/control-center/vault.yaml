@@ -1,0 +1,71 @@
+vault: 
+  policies:
+  - name: confluent-control-center
+    path: 
+    - name: kv/confluent/data/cloud 
+      capabilities:
+      - read
+    - name: kv/confluent/data/control-center 
+      capabilities:
+      - read
+    - name: kv/confluent/data/jksPassword 
+      capabilities:
+      - read
+    - name: pki_int_lab_okd_local/issue/confluent-control-center 
+      capabilities:
+      - read
+      - list
+      - update
+    - name: pki_int_lab_okd_local/sign/confluent-control-center 
+      capabilities:
+      - create
+      - update
+    - name: kv/okd4/data/production/flux
+      capabilities:
+      - read
+  - name: confluent-ingress-issuer
+    path: 
+    - name: pki_int_lab_okd_local/sign/confluent-ingress-issuer 
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: confluent-control-center
+    path: kubernetes-okd4
+    bound_sa_names:
+    - control-center
+    - vault
+    - vault-issuer
+    - external-secrets
+    bound_sa_namespaces:
+    - confluent
+    - hashicorp
+    - external-secrets
+    token_policies:
+    - confluent-control-center
+    - flux-system-policy-reader
+  - name: confluent-ingress-issuer
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault-issuer
+    - vault
+    bound_sa_namespaces:
+    - confluent
+    - hashicorp
+    token_policies:
+    - confluent-ingress-issuer
+  pki_roles:
+  - name: confluent-control-center
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - control-center
+    - control-center.confluent
+    - control-center.confluent.svc
+    - control-center-registry.confluent.svc.cluster.local
+    - confluent.svc.cluster.local
+    - lab.okd.local
+  - name: confluent-ingress-issuer
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - control-center
+    - control-center.lab.okd.local

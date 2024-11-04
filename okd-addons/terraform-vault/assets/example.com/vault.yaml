@@ -1,0 +1,32 @@
+vault: 
+  policies:
+  - name: example-com-ingress-issuer
+    path: 
+    - name: pki_int_lab_okd_local/sign/example-com-ingress-issuer 
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: example-com-ingress-issuer
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault-issuer
+    - vault
+    bound_sa_namespaces:
+    - httpbin
+    - hashicorp
+    token_policies:
+    - example-com-ingress-issuer
+  pki_roles:
+  - name: example-com-ingress-issuer
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - example.com
+    - my-secure-app
+    - my-secure-app.example.com
+    - secureapp
+    - secureapp.example.com
+    - admin-apisix-dev
+    - admin.apisix.dev
+    - weave-gitops
+    - weave-gitops.example.com

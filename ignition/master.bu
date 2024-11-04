@@ -1,0 +1,66 @@
+variant: fcos
+version: 1.4.0
+passwd:
+  users:
+    - name: core
+      groups:
+        - docker
+        - wheel
+        - sudo
+      ssh_authorized_keys:
+        - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCyFNVGtcevAqFRTB+boHO3aqqOlunXRuc0MVIJumisc6y2H+XvyW2Pk0khp0QNck1uPKzXNB5SziZp/xCadgQQgWCP7sh0h1R5/aMYnQHZZd9It+dXDNrBXvFIjzB3h7mr9d4neyp2iEN5vS377LagdZ7hj0U211JozcyPssJ6ESOtftHNVcnLPwkOkKoyKcTWTTSrUPlTUqOM8EDQsGOqOy6IgmBzzcfJ9J8WeocVF2fzCqHKGcUmRE/bw170g8fAg4iV5qYOnsvFMLepxp087MgvDyHzQhK+ockv1X/oJiX9VVUKxpNoLrXZmd+g1ADWOtcV+4acIUr9qY5K0fPUgmeTP0WRmQggD3LXMSQ0hKsRZvhSijleFMhZ2w9q9u7EoGa6ODnY1bhhKW7rJ3dYCEpUi7/02ZLFI+m6dZf8Ouenn4MpHmR8B86wP9luciu7xexCEwE1T+0tLG6OmyK+WMl0jAynU+PFiaefEFPyWa5qQsT7V0EhIdiXGQPvTT8= root@okd4-cli
+storage:
+  files:
+    # https://coreos.github.io/ignition/configuration-v3_3/
+    - path: /etc/target.ign
+      contents:
+       source: http://okd4-cli.lab.okd.local/okd4/master.ign
+      mode: 0644
+    - path: /etc/pki/ca-trust/source/anchors/pfsense-lab-okd-root-ca.crt
+      contents:
+       source: http://okd4-cli.lab.okd.local/okd4/pfsense-lab-okd-root-ca.crt
+      mode: 0644
+    - path: /etc/pki/ca-trust/source/anchors/pfsense-lab-okd-intermediate-ca.crt
+      contents:
+       source: http://okd4-cli.lab.okd.local/okd4/pfsense-lab-okd-intermediate-ca.crt
+      mode: 0644
+    - path: /etc/sysctl.d/10-disable-ipv6.conf
+      contents:
+        inline: |
+          # disable IPv6
+          net.ipv6.conf.all.disable_ipv6 = 1
+          net.ipv6.conf.default.disable_ipv6 = 1
+          net.ipv6.conf.enp0s4.disable_ipv6 = 1
+    - path: /etc/sysctl.d/99-kubernetes-cri.conf
+      contents:
+        inline: |
+          # Kernel parameters required by the cri-o container engine.
+          net.bridge.bridge-nf-call-iptables  = 1
+          net.ipv4.ip_forward                 = 1
+          #net.bridge.bridge-nf-call-ip6tables = 1
+    - path: /etc/modules-load.d/crio-net.conf
+      contents:
+        inline: |
+          # Kernel modules required by the cri-o container engine.
+          overlay
+          br_netfilter
+systemd:
+  units:
+    - name: python3-for-ansible.service
+      enabled: true
+      contents: |
+          [Unit]
+          Requires=network-online.target
+          After=network-online.target
+          Before=sshd.service
+          [Service]
+          Type=oneshot
+          ExecCondition=/usr/bin/test ! -f /etc/python3-for-ansible.done
+          ExecStart=/usr/bin/sed -i '/\\[updates\\]/,/^\\[/ s/^enabled=.*$/enabled=0/' /etc/yum.repos.d/fedora-updates.repo
+          ExecStart=/usr/bin/rpm-ostree install python3 libselinux-python3
+          ExecStart=/usr/bin/sed -i '/\\[updates\\]/,/^\\[/ s/^enabled=.*$/enabled=1/' /etc/yum.repos.d/fedora-updates.repo
+          ExecStart=/usr/bin/sed -i '/^\\[updates\\]/a exclude=libxcrypt-compat* mpdecimal* python-pip-wheel* python-setuptools-wheel* python-unversioned-command* python3* python3-libs* python3-selinux*' /etc/yum.repos.d/fedora-updates.repo
+          ExecStartPost=/usr/bin/touch /etc/python3-for-ansible.done
+          ExecStartPost=/usr/sbin/shutdown -r now
+          [Install]
+          WantedBy=multi-user.target

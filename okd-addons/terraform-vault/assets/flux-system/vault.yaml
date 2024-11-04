@@ -1,0 +1,26 @@
+vault: 
+  policies:
+  - name: flux-system-policy-reader
+    path: 
+    - name: kv/okd4/data/pfsense-ca
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/base
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/flux
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/image-registry
+      capabilities:
+      - read
+  auth_k8s_roles:
+  - name: flux-system
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - vault
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - flux-system-policy-reader   

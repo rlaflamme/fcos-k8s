@@ -1,0 +1,58 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- gotk-components.yaml
+- gotk-sync.yaml
+commonAnnotations:
+  config.kyverno.io/inject-trusted-cabundle: "enabled"
+images:
+  - name: ghcr.io/fluxcd/helm-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/helm-controller
+  - name: ghcr.io/fluxcd/image-automation-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/image-automation-controller
+  - name: ghcr.io/fluxcd/image-reflector-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/image-reflector-controller
+  - name: ghcr.io/fluxcd/kustomize-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/kustomize-controller
+  - name: ghcr.io/fluxcd/notification-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/notification-controller
+  - name: ghcr.io/fluxcd/source-controller
+    newName: hub-registry.lab.okd.local/ghcr.io/fluxcd/source-controller
+patches:
+  - patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --concurrent=20
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --requeue-dependency=5s
+    target:
+      kind: Deployment
+      name: "(kustomize-controller|helm-controller|source-controller)"
+  - patch: |
+      - op: add
+        path: /spec/template/spec/containers/0/volumeMounts/-
+        value:
+          name: trusted-ca
+          mountPath: /etc/ssl/certs
+          readOnly: true
+      - op: add
+        path: /spec/template/spec/volumes/-
+        value:
+          name: trusted-ca
+          configMap:
+            name: public-pfsense-bundle
+            items:
+              - key: ca-bundle.crt 
+                path: tls-ca-bundle.pem 
+    target:
+      kind: Deployment
+      name: "(source-controller|helm-controller|image-reflector-controller|image-automation-controller)"
+  - patch: |
+      - op: add
+        path: /metadata/labels
+        value:
+          trust: enabled
+    target:
+      kind: Namespace
+      name: flux-system

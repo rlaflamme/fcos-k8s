@@ -1,0 +1,11 @@
+vault: 
+  pki_roles:
+  - name: confluent-control-center
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - control-center
+    - control-center.confluent
+    - control-center.confluent.svc
+    - control-center-registry.confluent.svc.cluster.local
+    - confluent.svc.cluster.local
+    - lab.okd.local

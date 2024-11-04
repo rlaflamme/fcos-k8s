@@ -1,0 +1,38 @@
+---
+# Flannel CNI deploy
+
+- name: Test connection to ansible node with ping
+  ansible.builtin.ping:
+  delegate_to: 127.0.0.1
+
+- name: Deploy flannel
+  delegate_to: 127.0.0.1
+  ansible.builtin.command:
+    cmd: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  register: flannel_deploy_output
+
+- name: Print Flannel deploy output
+  ansible.builtin.debug:
+    var: flannel_deploy_output.stdout_lines
+
+- name: Reboot leader control plane node
+  ansible.builtin.reboot:
+    post_reboot_delay: 10
+    reboot_timeout: 600
+
+- name: Test connection to the leader control plane node
+  ansible.builtin.ping:
+
+- name: Check Flannel Pod
+  delegate_to: 127.0.0.1
+  ansible.builtin.command:
+    cmd: kubectl get pod -n kube-flannel -l app=flannel -o jsonpath='{..status.phase}'
+  register: flannel_podcheck_output
+  until: flannel_podcheck_output.stdout == "Running"
+  ignore_errors: yes
+  retries: 20
+  delay: 10
+
+- name: Print Pod Status
+  ansible.builtin.debug:
+    var: flannel_podcheck_output.stdout

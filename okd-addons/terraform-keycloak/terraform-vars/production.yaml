@@ -1,0 +1,34 @@
+keycloak:
+  realm_name: okd4
+  address: https://keycloak.apps.lab.okd.local
+  config:
+    ca_cert_file: ./assets/pfsense-lab-okd-local-ca-bundle.pem
+  ldap_user_federation:
+    name: OpenLDAP
+    bind_dn: cn=Manager,dc=lab,dc=okd,dc=local
+    connection_url: ldaps://okd4-ldap-2.lab.okd.local
+    groups_dn: ou=group,dc=lab,dc=okd,dc=local
+    users_dn: ou=people,dc=lab,dc=okd,dc=local
+  realm_roles:
+    - dev_role
+    - secops_role
+  vault:
+    address: https://vault.lab.okd.local:8200
+    server_address: https://okd4-vault-1.lab.okd.local:8200
+    secrets:
+      keycloak:
+        path: kv/okd4/production/keycloak
+      keycloak_oidc_clients_apisix:
+        path: kv/okd4/production/keycloak/openid-clients/apisix
+      keycloak_oidc_clients_kong:
+        path: kv/okd4/production/keycloak/openid-clients/kong
+      keycloak_oidc_clients_kuma:
+        path: kv/okd4/production/keycloak/openid-clients/kuma
+      keycloak_oidc_clients_kyverno:
+        path: kv/okd4/production/keycloak/openid-clients/kyverno
+      keycloak_oidc_clients_vault:
+        path: kv/okd4/production/keycloak/openid-clients/vault
+      keycloak_oidc_clients_weave_gitops:
+        path: kv/okd4/production/keycloak/openid-clients/weave-gitops
+      openldap:
+        path: kv/okd4/production/openldap

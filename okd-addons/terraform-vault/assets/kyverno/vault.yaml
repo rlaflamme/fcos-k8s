@@ -1,0 +1,18 @@
+vault: 
+  policies:
+  - name: kyverno-policy-reader
+    path: 
+    - name: kv/okd4/data/production/keycloak/openid-clients/kyverno
+      capabilities:
+      - read
+  auth_k8s_roles:
+  - name: kyverno
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault
+    - external-secrets
+    bound_sa_namespaces:
+    - external-secrets
+    - hashicorp
+    token_policies:
+    - kyverno-policy-reader

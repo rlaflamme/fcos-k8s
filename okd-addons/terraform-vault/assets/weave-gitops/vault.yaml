@@ -1,0 +1,43 @@
+vault: 
+  policies:
+  - name: weave-gitops-policy-reader
+    path: 
+    - name: kv/okd4/data/production/keycloak/openid-clients/weave-gitops
+      capabilities:
+      - read
+  - name: weave-gitops-ingress-issuer
+    path: 
+    - name: pki_int_lab_okd_local/sign/weave-gitops-ingress 
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: weave-gitops
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault
+    - external-secrets
+    - weave-gitops
+    bound_sa_namespaces:
+    - external-secrets
+    - hashicorp
+    - weaveworks
+    token_policies:
+    - weave-gitops-policy-reader
+  - name: weave-gitops-ingress
+    path: kubernetes-okd4
+    bound_sa_names:
+    - vault-issuer
+    - vault
+    bound_sa_namespaces:
+    - weaveworks
+    - hashicorp
+    token_policies:
+    - weave-gitops-ingress-issuer
+  pki_roles:
+  - name: weave-gitops-ingress
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - weave-gitops
+    - weave-gitops.lab.okd.local
+    - lab.okd.local

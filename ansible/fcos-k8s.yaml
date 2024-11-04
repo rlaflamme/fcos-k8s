@@ -1,0 +1,22 @@
+---
+
+- name: Fedora CoreOS Kubernetes setup with kubeadm
+  hosts: controlplanes:workers
+  roles:
+    # - remove-python3-for-ansible-service
+    - fcos-k8s-base
+    # kubeadm init on controlplane
+    - role: kubeadm-init
+      when: inventory_hostname in groups.controlplane_leader
+    # flannel depoy on controlplane
+    - role: flannel-deploy
+      when: inventory_hostname in groups.controlplane_leader
+    # kubeadm join on control planes
+    - role: kubeadm-join-controlplanes
+      when: inventory_hostname in groups.controlplane_followers
+    # kubeadm join on workers (test on controlplane)
+    - role: kubeadm-join-workers
+      when: inventory_hostname in groups.workers
+    - role: finalize-join-nodes
+    - role: coredns-pods
+      when: inventory_hostname in groups.controlplane_leader

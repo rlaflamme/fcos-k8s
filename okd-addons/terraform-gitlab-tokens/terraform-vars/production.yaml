@@ -1,0 +1,69 @@
+gitlab_tokens:
+  config:
+    ca_cert_file: ./assets/pfsense-lab-okd-local-ca-bundle.pem
+  gitlab:
+    https_host: https://gitlab.lab.okd.local
+    projects:
+      flux_bootstrap: 
+        path: gitops/flux-bootstrap
+        tokens: 
+          flux_system_token_reader: 
+            name: production_flux_system_token_reader
+            access_level: developer
+            scopes: 
+              - read_repository
+          flux_system_token_writer: 
+            name: production_flux_system_token_writer
+            access_level: maintainer
+            scopes: 
+              - api
+      config_infra:
+        path: gitops/flux-infra
+        tokens:
+          config_infra_token_reader: 
+            name: production_flux_config_infra_token_reader
+            access_level: developer
+            scopes: 
+              - read_repository
+      config_apps:
+        path: gitops/flux-infra
+        tokens:
+          config_apps_token_writer: 
+            name: production_flux_config_apps_token_writer 
+            access_level: developer
+            scopes: 
+              - write_repository
+    groups:
+      helm:
+        path: helm
+        tokens:
+          helm_token_reader: 
+            name: production_flux_helm_token_reader
+            access_level: developer
+            scopes: 
+              - read_repository
+      gitops_tekton_welcome:
+        path: gitops-tekton-welcome
+        tokens:
+          gitops_tekton_welcome_token_reader: 
+            name: production_flux_gitops_tekton_welcome_token_reader
+            access_level: developer
+            scopes: 
+              - read_repository
+  vault:
+    address: https://okd4-vault-1.lab.okd.local:8200
+    secrets:
+      flux:
+        path: kv/okd4/production/flux
+        keys:
+          config_apps_token_writer: gitlab_project_config_apps_token_writer 
+          config_infra_token_reader: gitlab_project_config_infra_token_reader
+          flux_system_token_writer: gitlab_project_flux_system_token_writer
+          flux_system_token_reader: gitlab_project_flux_system_token_reader
+          helm_token_reader: gitlab_group_helm_token_reader
+          gitops_tekton_welcome_token_reader: gitlab_group_gitops_tekton_welcome_token_reader
+          cacerts: cacerts
+      terraform:
+        path: kv/okd4/production/terraform
+        keys:
+          tf_flux_token_writer: gitlab_tf_flux_token_writer

@@ -1,0 +1,32 @@
+---
+# Fedora CoreOS Kubernetes kubeadm join
+
+- name: Test connection with ping
+  ansible.builtin.ping:
+
+- name: Delete previous installation of pki if exists
+  ansible.builtin.file:
+    state: absent
+    path: /etc/kubernetes/pki
+
+- name: Copy pki directory from ansible node to other control planes
+  ansible.builtin.copy:
+    src: /tmp/{{ groups['controlplane_leader'][0] }}/var/home/core/pki/
+    dest: /etc/kubernetes/pki/
+
+- name: Get kubeadm join command with tokens from the ansible node
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ lookup('file', '/tmp/' + groups['controlplane_leader'][0] + '/kubeadm-join-command.sh') }} --control-plane"
+
+- name: Print kubeadm join control planes command with tokens
+  ansible.builtin.debug:
+    msg: "{{ kubeadm_join_command }}"
+
+- name: Execute kubeadm join
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_join_command }}"
+  register: kubeadm_join_output
+
+- name: Print kubeadm join output
+  ansible.builtin.debug:
+    var: kubeadm_join_output.stdout_lines

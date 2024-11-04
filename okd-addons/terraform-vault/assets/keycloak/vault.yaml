@@ -1,0 +1,171 @@
+vault: 
+  policies:
+  - name: keycloak-policy-reader
+    path: 
+    - name: kv/okd4/data/production/keycloak
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/keycloak/*
+      capabilities:
+      - read
+    - name: kv/okd4/data/production/openldap
+      capabilities:
+      - read
+    - name: auth/oidc/config
+      capabilities:
+      - read
+    - name: auth/oidc/role/*
+      capabilities:
+      - read
+    - name: auth/oidc/tune
+      capabilities:
+      - read
+    - name: identity/group
+      capabilities:
+      - read
+    - name: identity/group-alias
+      capabilities:
+      - read
+    - name: identity/group-alias/id/*
+      capabilities:
+      - read
+    - name: identity/group/id/*
+      capabilities:
+      - read
+    - name: identity/group/name/*
+      capabilities:
+      - read
+    - name: identity/oidc/key/keycloak
+      capabilities:
+      - read
+    - name: identity/oidc/role/*
+      capabilities:
+      - read
+    - name: sys/auth/oidc
+      capabilities:
+      - read
+    - name: sys/mounts/auth/oidc
+      capabilities:
+      - read
+    - name: sys/mounts/auth/oidc/tune
+      capabilities:
+      - read
+    - name: sys/policies/acl/*
+      capabilities:
+      - read
+  - name: keycloak-policy-writer
+    path: 
+    - name: auth/oidc/config
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: auth/oidc/role/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: auth/oidc/tune
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/group
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/group-alias
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/group-alias/id/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/group/id/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/group/name/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/oidc/key/keycloak
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: identity/oidc/role/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: sys/auth/oidc
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+      - sudo
+    - name: sys/mounts/auth/oidc
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: sys/mounts/auth/oidc/tune
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+    - name: sys/policies/acl/*
+      capabilities:
+      - create
+      - update
+      - patch
+      - delete
+  - name: keycloak-signer
+    path: 
+    - name: pki_int_lab_okd_local/sign/keycloak
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: keycloak
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - tf-runner
+    - vault
+    - vault-issuer
+    bound_sa_namespaces:
+    - external-secrets
+    - flux-system
+    - hashicorp
+    - keycloak
+    token_policies:
+    - keycloak-policy-reader
+    - keycloak-policy-writer
+    - keycloak-signer
+  pki_roles:
+  - name: keycloak
+    backend: pki_int_lab_okd_local
+    allowed_domains:
+    - keycloak
+    - keycloak.keycloak.svc

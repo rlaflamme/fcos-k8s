@@ -1,0 +1,31 @@
+vault: 
+  policies:
+  - name: gitops-policy-reader
+    path: 
+    - name: kv/gitops/*
+      capabilities:
+       - read
+  - name: okd4-policy-reader
+    path: 
+    - name: kv/okd4/* 
+      capabilities:
+      - read
+  auth_k8s_roles:
+  - name: external-secrets-gitops
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - vault
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - gitops-policy-reader
+  - name: external-secrets-okd4
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - vault
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - okd4-policy-reader

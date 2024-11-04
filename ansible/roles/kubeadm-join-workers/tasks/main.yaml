@@ -1,0 +1,23 @@
+---
+# Fedora CoreOS Kubernetes kubeadm join
+
+- name: Test connection with ping
+  ansible.builtin.ping:
+
+- name: Get kubeadm join command with tokens from local file
+  ansible.builtin.set_fact:
+    kubeadm_join_command: "{{ lookup('file', '/tmp/' + groups['controlplane_leader'][0] + '/kubeadm-join-command.sh') }}"
+
+- name: Print kubeadm join workers command workers with tokens
+  ansible.builtin.debug:
+    msg: "{{ kubeadm_join_command }}"
+
+- name: Execute kubeadm join
+  ansible.builtin.command:
+    cmd: "{{ kubeadm_join_command }}"
+  register: kubeadm_join_output
+
+- name: Print kubeadm join output
+  ansible.builtin.debug:
+    var: kubeadm_join_output.stdout_lines
+

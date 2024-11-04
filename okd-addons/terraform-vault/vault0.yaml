@@ -1,0 +1,81 @@
+vault: 
+  policies:
+  - name: gitops-policy-reader
+    path: 
+    - name: kv/gitops/*
+      capabilities:
+       - read
+  - name: okd4-policy-reader
+    path: 
+    - name: kv/okd4/* 
+      capabilities:
+      - read
+  - name: flux-policy-reader
+    path: 
+    - name: kv/okd4/data/okd4-cli 
+      capabilities:
+      - read
+  - name: confluent-control-center
+    path: 
+    - name: kv/confluent/data/control-center 
+      capabilities:
+      - read
+    - name: pki_int_lab_okd_local/issue/confluent-control-center 
+      capabilities:
+      - read
+      - list
+      - update
+  - name: confluent-control-center-ingress-issuer
+    path: 
+    - name: pki_int_lab_okd_local/sign/confluent-control-center-ingress-issuer 
+      capabilities:
+      - create
+      - update
+  auth_k8s_roles:
+  - name: external-secrets-gitops
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - vault
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - gitops-policy-reader
+  - name: external-secrets-okd4
+    path: kubernetes-okd4
+    bound_sa_names:
+    - external-secrets
+    - vault
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - okd4-policy-reader
+    - vault
+  - name: flux-git-repository
+    path: kubernetes-okd4
+    bound_sa_names:
+    - "*"
+    bound_sa_namespaces:
+    - "*"
+    token_policies:
+    - flux-policy-reader
+  - name: confluent-control-center
+    path: kubernetes-okd4
+    bound_sa_names:
+    - default
+    - vault
+    bound_sa_namespaces:
+    - confluent
+    - hashicorp
+    token_policies:
+    - confluent-control-center
+  - name: confluent-control-center-ingress-issuer
+    path: kubernetes-okd4
+    bound_sa_names:
+    - issuer
+    - vault
+    bound_sa_namespaces:
+    - confluent
+    - hashicorp
+    token_policies:
+    - confluent-control-center-ingress-issuer

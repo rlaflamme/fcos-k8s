@@ -1,0 +1,13 @@
+*.tfstate
+.terraform.lock.hcl
+.terraform/
+terraform.tfstate*
+*.log
+release/
+install_dir/
+.idea/
+*.ign
+terraform/okd
+*.tfplan
+ansible/clusterconfig.yaml
+ansible/kubeadm-join-command.sh
